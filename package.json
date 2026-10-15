@@ -1,0 +1,26 @@
+{
+  "name": "flowpilot-ai-root",
+  "version": "1.0.0",
+  "private": true,
+  "description": "FlowPilot AI - Intelligent Workflow Automation Platform",
+  "workspaces": [
+    "frontend",
+    "backend",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "build:frontend": "npm run build --workspace=@flowpilot/web",
+    "build:backend": "npm run build --workspace=@flowpilot/api",
+    "dev": "npm run dev --workspace=@flowpilot/web",
+    "dev:frontend": "npm run dev --workspace=@flowpilot/web",
+    "dev:backend": "npm run dev --workspace=@flowpilot/api",
+    "dev:all": "node scripts/start-all.js",
+    "test": "npm run test --workspace=@flowpilot/api",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}

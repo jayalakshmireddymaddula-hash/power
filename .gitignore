@@ -1,0 +1,112 @@
+# ==============================================================================
+# FlowPilot AI — Git Ignore Configuration
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Environment & Secret Credentials (CRITICAL - NEVER COMMIT)
+# ------------------------------------------------------------------------------
+.env
+.env.*
+*.env
+*.env.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Nested environment files in frontend/, backend/, etc.
+**/.env
+**/.env.*
+**/*.env
+**/.env.local
+**/.env.development.local
+**/.env.test.local
+**/.env.production.local
+
+# Preserved safe template files (ONLY commit .env.example)
+!.env.example
+!**/.env.example
+
+# ------------------------------------------------------------------------------
+# 2. Dependencies
+# ------------------------------------------------------------------------------
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.pnpm-store/
+
+# ------------------------------------------------------------------------------
+# 3. Build & Compiler Outputs
+# ------------------------------------------------------------------------------
+dist/
+**/dist/
+build/
+**/build/
+out/
+**/out/
+.vite/
+**/.vite/
+.turbo/
+**/.turbo/
+*.tsbuildinfo
+**/*.tsbuildinfo
+
+# ------------------------------------------------------------------------------
+# 4. Local Database & Durable Storage
+# ------------------------------------------------------------------------------
+data/
+**/data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+*.sqlite-journal
+*.sqlite3-journal
+
+# ------------------------------------------------------------------------------
+# 5. Testing & Code Coverage
+# ------------------------------------------------------------------------------
+coverage/
+**/coverage/
+.nyc_output/
+playwright-report/
+test-results/
+blob-report/
+.system_generated/
+
+# ------------------------------------------------------------------------------
+# 6. Operating System Artifacts
+# ------------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ------------------------------------------------------------------------------
+# 7. IDE, Editors & Scratch Files
+# ------------------------------------------------------------------------------
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*~
+*.bak
+*.tmp
+tmp/
+temp/
+scratch/
+**/.vscode/*
+!**/.vscode/extensions.json
+!**/.vscode/settings.json

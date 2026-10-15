@@ -1,0 +1,376 @@
+import { WorkflowDefinition } from "../schemas/workflow.schema.js";
+
+export interface WorkflowTemplate {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  definition: WorkflowDefinition;
+}
+
+export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
+  {
+    id: "tpl_purchase_approval",
+    name: "Intelligent Purchase Request and Approval",
+    category: "procurement",
+    description:
+      "Validates purchase request, runs AI classification, checks multi-tier approval policy, assigns human approver(s), and notifies requester upon completion.",
+    definition: {
+      nodes: [
+        {
+          id: "node_trigger_1",
+          type: "trigger",
+          name: "Purchase Request Submitted",
+          description: "Starts immediately when an employee files a purchase request",
+          config: { event: "request.submitted", category: "procurement" },
+          position: { x: 100, y: 150 },
+        },
+        {
+          id: "node_ai_classify_1",
+          type: "ai_classify",
+          name: "AI Category & Priority Validation",
+          description: "Gemini analyzes request justification, risk factors, and policy flags",
+          config: { model: "gemini-2.5-flash", fallbackPriority: "normal" },
+          position: { x: 350, y: 150 },
+        },
+        {
+          id: "node_condition_policy",
+          type: "condition",
+          name: "Policy Amount Threshold Check",
+          description: "Evaluates whether amount exceeds ₹5,000 requiring department manager approval",
+          config: {
+            field: "amountMinor",
+            operator: "greater_than",
+            value: 500000,
+          },
+          position: { x: 620, y: 150 },
+        },
+        {
+          id: "node_approval_1",
+          type: "approval",
+          name: "Department Manager Approval",
+          description: "Human-in-the-loop approval task assigned to department manager",
+          config: {
+            requiredRole: "manager",
+            stage: 1,
+            timeoutHours: 48,
+          },
+          position: { x: 900, y: 80 },
+        },
+        {
+          id: "node_approval_standard",
+          type: "approval",
+          name: "Standard Team Approver Review",
+          description: "Single-approver task for standard amounts up to ₹5,000",
+          config: {
+            requiredRole: "approver",
+            stage: 1,
+            timeoutHours: 48,
+          },
+          position: { x: 900, y: 260 },
+        },
+        {
+          id: "node_notify_complete",
+          type: "notification",
+          name: "Send Decision Notification",
+          description: "Generates in-app alert to requester with decision comments",
+          config: {
+            title: "Purchase Request Status Updated",
+            template: "Your request for {{title}} has been processed.",
+          },
+          position: { x: 1180, y: 170 },
+        },
+        {
+          id: "node_end_1",
+          type: "end",
+          name: "Workflow Completed",
+          description: "Records audit trace and final state",
+          config: { recordMetrics: true },
+          position: { x: 1420, y: 170 },
+        },
+      ],
+      edges: [
+        { id: "e1", source: "node_trigger_1", target: "node_ai_classify_1" },
+        { id: "e2", source: "node_ai_classify_1", target: "node_condition_policy" },
+        { id: "e3", source: "node_condition_policy", target: "node_approval_1", label: "Amount > ₹5,000", conditionHandle: "true" },
+        { id: "e4", source: "node_condition_policy", target: "node_approval_standard", label: "Amount <= ₹5,000", conditionHandle: "false" },
+        { id: "e5", source: "node_approval_1", target: "node_notify_complete" },
+        { id: "e6", source: "node_approval_standard", target: "node_notify_complete" },
+        { id: "e7", source: "node_notify_complete", target: "node_end_1" },
+      ],
+      metadata: { version: 1, author: "FlowPilot AI System" },
+    },
+  },
+  {
+    id: "tpl_doc_extraction",
+    name: "Document Information Extraction",
+    category: "document_processing",
+    description: "Extracts key invoice/receipt fields using Gemini, validates confidence levels, and flags for manual review if confidence is low.",
+    definition: {
+      nodes: [
+        {
+          id: "doc_trigger",
+          type: "trigger",
+          name: "Document Uploaded",
+          config: { event: "document.uploaded" },
+          position: { x: 100, y: 150 },
+        },
+        {
+          id: "doc_ai_extract",
+          type: "ai_extract",
+          name: "AI Document Field Extraction",
+          config: { expectedType: "invoice" },
+          position: { x: 380, y: 150 },
+        },
+        {
+          id: "doc_condition_confidence",
+          type: "condition",
+          name: "Confidence >= 85%",
+          config: { field: "confidence", operator: "greater_than_or_equal", value: 0.85 },
+          position: { x: 660, y: 150 },
+        },
+        {
+          id: "doc_review_task",
+          type: "assign_task",
+          name: "Assign Human Review Task",
+          config: { title: "Review Low-Confidence Document Extraction", priority: "high" },
+          position: { x: 920, y: 60 },
+        },
+        {
+          id: "doc_notify",
+          type: "notification",
+          name: "Extraction Ready Notification",
+          config: { title: "Document Processed Successfully" },
+          position: { x: 920, y: 240 },
+        },
+        {
+          id: "doc_end",
+          type: "end",
+          name: "Completed",
+          config: {},
+          position: { x: 1200, y: 150 },
+        },
+      ],
+      edges: [
+        { id: "de1", source: "doc_trigger", target: "doc_ai_extract" },
+        { id: "de2", source: "doc_ai_extract", target: "doc_condition_confidence" },
+        { id: "de3", source: "doc_condition_confidence", target: "doc_review_task", label: "Low Confidence", conditionHandle: "false" },
+        { id: "de4", source: "doc_condition_confidence", target: "doc_notify", label: "High Confidence", conditionHandle: "true" },
+        { id: "de5", source: "doc_review_task", target: "doc_end" },
+        { id: "de6", source: "doc_notify", target: "doc_end" },
+      ],
+      metadata: { version: 1 },
+    },
+  },
+  {
+    id: "tpl_employee_onboarding",
+    name: "Employee Onboarding Checklist",
+    category: "hr",
+    description: "Automates new hire IT provision tasks, HR document collection, manager check-in reminders, and progress tracking.",
+    definition: {
+      nodes: [
+        {
+          id: "ob_trigger",
+          type: "trigger",
+          name: "New Hire Registered",
+          config: { event: "hr.onboarding.started" },
+          position: { x: 100, y: 150 },
+        },
+        {
+          id: "ob_task_it",
+          type: "assign_task",
+          name: "Assign IT Equipment & Account Provision",
+          config: { title: "Configure Workstation & SSO Accounts", priority: "high" },
+          position: { x: 380, y: 100 },
+        },
+        {
+          id: "ob_task_docs",
+          type: "assign_task",
+          name: "Collect Signed Employment Documents",
+          config: { title: "Verify Compliance & Tax Documents", priority: "normal" },
+          position: { x: 380, y: 220 },
+        },
+        {
+          id: "ob_delay",
+          type: "delay",
+          name: "Wait 24 Hours",
+          config: { delayMinutes: 1440 },
+          position: { x: 680, y: 160 },
+        },
+        {
+          id: "ob_notify",
+          type: "notification",
+          name: "Send Welcome & Checklist Reminder",
+          config: { title: "Welcome to the Team! Check your onboarding milestones" },
+          position: { x: 950, y: 160 },
+        },
+        {
+          id: "ob_end",
+          type: "end",
+          name: "Onboarding Initiated",
+          config: {},
+          position: { x: 1220, y: 160 },
+        },
+      ],
+      edges: [
+        { id: "oe1", source: "ob_trigger", target: "ob_task_it" },
+        { id: "oe2", source: "ob_trigger", target: "ob_task_docs" },
+        { id: "oe3", source: "ob_task_it", target: "ob_delay" },
+        { id: "oe4", source: "ob_task_docs", target: "ob_delay" },
+        { id: "oe5", source: "ob_delay", target: "ob_notify" },
+        { id: "oe6", source: "ob_notify", target: "ob_end" },
+      ],
+      metadata: { version: 1 },
+    },
+  },
+  {
+    id: "tpl_task_escalation",
+    name: "Task Assignment and Escalation",
+    category: "operations",
+    description: "Assigns critical operational tasks, monitors completion deadlines, and automatically escalates overdue items to leadership.",
+    definition: {
+      nodes: [
+        {
+          id: "te_trigger",
+          type: "trigger",
+          name: "Operational Incident / Request Logged",
+          config: { event: "task.created" },
+          position: { x: 100, y: 150 },
+        },
+        {
+          id: "te_assign",
+          type: "assign_task",
+          name: "Assign Initial Responder",
+          config: { title: "Triage & Investigate Request", priority: "high" },
+          position: { x: 380, y: 150 },
+        },
+        {
+          id: "te_delay",
+          type: "delay",
+          name: "Wait for SLA Window (4 Hours)",
+          config: { delayMinutes: 240 },
+          position: { x: 650, y: 150 },
+        },
+        {
+          id: "te_cond",
+          type: "condition",
+          name: "Is Task Still Pending?",
+          config: { field: "status", operator: "equals", value: "pending" },
+          position: { x: 920, y: 150 },
+        },
+        {
+          id: "te_escalate",
+          type: "notification",
+          name: "Escalate Overdue Alert to Manager",
+          config: { title: "SLA Alert: Task Pending Past Deadline", priority: "urgent" },
+          position: { x: 1180, y: 60 },
+        },
+        {
+          id: "te_end",
+          type: "end",
+          name: "Resolved",
+          config: {},
+          position: { x: 1420, y: 150 },
+        },
+      ],
+      edges: [
+        { id: "te_e1", source: "te_trigger", target: "te_assign" },
+        { id: "te_e2", source: "te_assign", target: "te_delay" },
+        { id: "te_e3", source: "te_delay", target: "te_cond" },
+        { id: "te_e4", source: "te_cond", target: "te_escalate", label: "Overdue", conditionHandle: "true" },
+        { id: "te_e5", source: "te_cond", target: "te_end", label: "Completed in SLA", conditionHandle: "false" },
+        { id: "te_e6", source: "te_escalate", target: "te_end" },
+      ],
+      metadata: { version: 1 },
+    },
+  },
+  {
+    id: "tpl_weekly_report",
+    name: "Weekly Operational Report",
+    category: "reporting",
+    description: "Periodically aggregates workflow executions, turnaround times, and generates executive AI summaries.",
+    definition: {
+      nodes: [
+        {
+          id: "wr_trigger",
+          type: "trigger",
+          name: "Weekly Schedule Trigger",
+          config: { cron: "0 9 * * 1" },
+          position: { x: 100, y: 150 },
+        },
+        {
+          id: "wr_aggregate",
+          type: "generate_report",
+          name: "Aggregate Weekly Workflow Metrics",
+          config: { timeframe: "7d" },
+          position: { x: 400, y: 150 },
+        },
+        {
+          id: "wr_notify",
+          type: "notification",
+          name: "Publish Report to Admins & Managers",
+          config: { title: "Weekly Operational Digest Ready" },
+          position: { x: 700, y: 150 },
+        },
+        {
+          id: "wr_end",
+          type: "end",
+          name: "Report Published",
+          config: {},
+          position: { x: 980, y: 150 },
+        },
+      ],
+      edges: [
+        { id: "wr_e1", source: "wr_trigger", target: "wr_aggregate" },
+        { id: "wr_e2", source: "wr_aggregate", target: "wr_notify" },
+        { id: "wr_e3", source: "wr_notify", target: "wr_end" },
+      ],
+      metadata: { version: 1 },
+    },
+  },
+  {
+    id: "tpl_deadline_reminders",
+    name: "Deadline Reminder Automation",
+    category: "operations",
+    description: "Monitors upcoming approval and task due dates, sending timely proactive notifications before deadlines expire.",
+    definition: {
+      nodes: [
+        {
+          id: "dr_trigger",
+          type: "trigger",
+          name: "Daily Deadline Monitor",
+          config: { cron: "0 8 * * *" },
+          position: { x: 100, y: 150 },
+        },
+        {
+          id: "dr_condition",
+          type: "condition",
+          name: "Has Approvals Due within 24h?",
+          config: { field: "hoursUntilDue", operator: "less_than_or_equal", value: 24 },
+          position: { x: 400, y: 150 },
+        },
+        {
+          id: "dr_notify",
+          type: "notification",
+          name: "Send Urgent Due-Date Reminder",
+          config: { title: "Pending Approval Due in < 24 Hours", priority: "high" },
+          position: { x: 700, y: 100 },
+        },
+        {
+          id: "dr_end",
+          type: "end",
+          name: "Monitor Completed",
+          config: {},
+          position: { x: 980, y: 150 },
+        },
+      ],
+      edges: [
+        { id: "dr_e1", source: "dr_trigger", target: "dr_condition" },
+        { id: "dr_e2", source: "dr_condition", target: "dr_notify", label: "Due Soon", conditionHandle: "true" },
+        { id: "dr_e3", source: "dr_condition", target: "dr_end", label: "No Approvals Due", conditionHandle: "false" },
+        { id: "dr_e4", source: "dr_notify", target: "dr_end" },
+      ],
+      metadata: { version: 1 },
+    },
+  },
+];
