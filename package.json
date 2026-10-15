@@ -2,6 +2,7 @@
   "name": "flowpilot-ai-root",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "FlowPilot AI - Intelligent Workflow Automation Platform",
   "workspaces": [
     "packages/*",
