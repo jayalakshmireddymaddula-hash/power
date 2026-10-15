@@ -6,7 +6,10 @@ import { useAuth } from "../context/AuthContext";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
-import { v4 as uuidv4 } from "uuid";
+const generateUUID = () =>
+  typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+    ? crypto.randomUUID()
+    : "req-" + Math.random().toString(36).substring(2, 11) + "-" + Date.now().toString(36);
 
 export const NewRequestPage: React.FC = () => {
   const navigate = useNavigate();
@@ -118,7 +121,7 @@ export const NewRequestPage: React.FC = () => {
         businessJustification: businessJustification.trim(),
         priority,
         departmentId: departmentId || undefined,
-        idempotencyKey: uuidv4(), // Prevent duplicate submission
+        idempotencyKey: generateUUID(), // Prevent duplicate submission
       };
 
       if (category === "procurement") {
