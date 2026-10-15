@@ -1,4 +1,4 @@
-import { WorkflowDefinition, NodeType } from "@flowpilot/shared";
+import { WorkflowDefinition, NodeType, WorkflowNode, WorkflowEdge } from "@flowpilot/shared";
 
 export interface ValidationResult {
   valid: boolean;
@@ -31,8 +31,8 @@ export function validateWorkflowGraph(definition: WorkflowDefinition): Validatio
   }
 
   // 1. Check for trigger and end nodes
-  const triggerNodes = nodes.filter((n) => n.type === "trigger");
-  const endNodes = nodes.filter((n) => n.type === "end");
+  const triggerNodes = nodes.filter((n: WorkflowNode) => n.type === "trigger");
+  const endNodes = nodes.filter((n: WorkflowNode) => n.type === "end");
 
   if (triggerNodes.length === 0) {
     errors.push("Workflow must have at least one trigger node.");
@@ -83,7 +83,7 @@ export function validateWorkflowGraph(definition: WorkflowDefinition): Validatio
   // 4. Validate Condition Node Branching
   for (const node of nodes) {
     if (node.type === "condition") {
-      const outgoing = edges.filter((e) => e.source === node.id);
+      const outgoing = edges.filter((e: WorkflowEdge) => e.source === node.id);
       if (outgoing.length < 2) {
         warnings.push(`Condition node '${node.id}' should have at least 2 outgoing branches (true/false).`);
       }

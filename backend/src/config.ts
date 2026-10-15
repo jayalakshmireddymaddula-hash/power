@@ -27,7 +27,8 @@ const envSchema = z.object({
   APP_NAME: z.string().default("FlowPilot AI"),
   APP_URL: z.string().default("http://localhost:5173"),
   API_URL: z.string().default("http://localhost:3000"),
-  API_PORT: z.coerce.number().default(3000),
+  API_PORT: z.coerce.number().default(Number(process.env.PORT) || 3000),
+  PORT: z.coerce.number().optional(),
   LOG_LEVEL: z.string().default("info"),
 
   // Supabase (Optional)

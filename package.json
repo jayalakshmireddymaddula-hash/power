@@ -4,14 +4,15 @@
   "private": true,
   "description": "FlowPilot AI - Intelligent Workflow Automation Platform",
   "workspaces": [
-    "frontend",
+    "packages/*",
     "backend",
-    "packages/*"
+    "frontend"
   ],
   "scripts": {
-    "build": "npm run build --workspaces --if-present",
-    "build:frontend": "npm run build --workspace=@flowpilot/web",
-    "build:backend": "npm run build --workspace=@flowpilot/api",
+    "build:shared": "npm run build --workspace=@flowpilot/shared",
+    "build:backend": "npm run build:shared && npm run build --workspace=@flowpilot/api",
+    "build:frontend": "npm run build:shared && npm run build --workspace=@flowpilot/web",
+    "build": "npm run build:shared && npm run build --workspace=@flowpilot/api && npm run build --workspace=@flowpilot/web",
     "prestart": "npm run build:backend",
     "start": "npm run start --workspace=@flowpilot/api",
     "dev": "npm run dev --workspace=@flowpilot/web",

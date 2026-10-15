@@ -1,6 +1,6 @@
 import { db } from "../lib/db.js";
 import { v4 as uuidv4 } from "uuid";
-import { WorkflowDefinition, WorkflowNode } from "@flowpilot/shared";
+import { WorkflowDefinition, WorkflowNode, WorkflowEdge } from "@flowpilot/shared";
 import { validateWorkflowGraph } from "./graph-validator.js";
 import { nodeHandlers, NodeExecutionContext } from "./node-registry.js";
 
@@ -73,7 +73,7 @@ export class WorkflowEngine {
     );
 
     // 5. Begin execution from the trigger node
-    const triggerNode = definition.nodes.find((n) => n.type === "trigger") || definition.nodes[0];
+    const triggerNode = definition.nodes.find((n: WorkflowNode) => n.type === "trigger") || definition.nodes[0];
     const finalStatus = await this.runFromNode(executionId, triggerNode.id, definition, {
       organizationId,
       executionId,
@@ -164,7 +164,7 @@ export class WorkflowEngine {
     );
 
     const currentNodeId = execution.current_node_id;
-    const outgoingEdge = definition.edges.find((e) => e.source === currentNodeId);
+    const outgoingEdge = definition.edges.find((e: WorkflowEdge) => e.source === currentNodeId);
 
     if (!outgoingEdge) {
       // No more nodes, complete execution
@@ -205,7 +205,7 @@ export class WorkflowEngine {
     let stepOutputs: Record<string, any> = { ...context.stepOutputs };
 
     while (currentNodeId) {
-      const node: WorkflowNode | undefined = definition.nodes.find((n) => n.id === currentNodeId);
+      const node: WorkflowNode | undefined = definition.nodes.find((n: WorkflowNode) => n.id === currentNodeId);
       if (!node) {
         await this.failExecution(executionId, "NODE_NOT_FOUND", `Node '${currentNodeId}' not found in definition.`);
         return "failed";
@@ -284,11 +284,11 @@ export class WorkflowEngine {
       }
 
       // Determine next node
-      const outgoingEdges = definition.edges.filter((e) => e.source === node.id);
+      const outgoingEdges = definition.edges.filter((e: WorkflowEdge) => e.source === node.id);
 
       if (node.type === "condition") {
         // Choose edge matching condition branch
-        const matchedEdge = outgoingEdges.find((e) => e.conditionHandle === result.nextConditionHandle) || outgoingEdges[0];
+        const matchedEdge = outgoingEdges.find((e: WorkflowEdge) => e.conditionHandle === result.nextConditionHandle) || outgoingEdges[0];
         currentNodeId = matchedEdge ? matchedEdge.target : null;
       } else {
         currentNodeId = outgoingEdges.length > 0 ? outgoingEdges[0].target : null;
