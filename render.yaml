@@ -1,0 +1,23 @@
+services:
+  # Backend REST API Service
+  - type: web
+    name: power-backend
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: APP_NAME
+        value: FlowPilot AI
+      - key: AI_PROVIDER
+        value: demo
+      - key: DATABASE_TYPE
+        value: sqlite
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: "*"
